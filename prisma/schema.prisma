@@ -13,22 +13,197 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts  Post[]
-
-  @@map("users")
+enum UserRole {
+  CUSTOMER
+  ADMIN
 }
 
-model Post {
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  gender       String
+  name         String
+  birthDate    DateTime
+  cpf          String        @unique
+  email        String        @unique
+  password     String
+  role         UserRole
+  addresses    Address[]
+  phoneNumbers PhoneNumber[]
+  ranking      Int           @default(0)
+  orders       Order[]
+  creditCards  CreditCard[]
+  Review       Review[]
+
+  @@map("Usuarios")
+}
+
+model Address {
+  id            Int     @id @default(autoincrement())
+  user          User    @relation(fields: [userId], references: [id])
+  userId        Int
+  residenceType String
+  streetType    String
+  streetName    String
+  number        String
+  neighborhood  String
+  postalCode    String
+  city          String
+  state         String
+  country       String
+  observations  String?
+  Order         Order[]
+
+  @@map("Enderecos")
+}
+
+model PhoneNumber {
+  id     Int    @id @default(autoincrement())
+  user   User   @relation(fields: [userId], references: [id])
+  userId Int
+  type   String
+  ddd    String
+  number String
+
+  @@map("Telefones")
+}
+
+model CreditCard {
+  id             Int    @id @default(autoincrement())
+  user           User   @relation(fields: [userId], references: [id])
+  userId         Int
+  cardNumber     String
+  cardHolderName String
+  cardBrand      String
+  securityCode   String
+
+  @@map("Cartoes")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  products Product[]
+
+  @@map("Categorias")
+}
+
+model Product {
+  id             Int                @id @default(autoincrement())
+  name           String
+  description    String
+  baseCost       Float
+  price          Float
+  category       Category           @relation(fields: [categoryId], references: [id])
+  categoryId     Int
+  pricingGroup   PricingGroup       @relation(fields: [pricingGroupId], references: [id])
+  pricingGroupId Int
+  variations     ProductVariation[]
+  stock          Stock[]
+  reviews        Review[]
+  images         Image[]
+  OrderItem      OrderItem[]
+
+  @@map("Produtos")
+}
+
+model ProductVariation {
+  id        Int         @id @default(autoincrement())
+  product   Product     @relation(fields: [productId], references: [id])
+  productId Int
+  name      String // e.g., "Red", "1.75mm", "500g spool"
+  price     Float?
+  stock     Int
+  OrderItem OrderItem[]
+
+  @@map("ProdutosVariacoes")
+}
+
+model Stock {
   id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author User @relation(fields: [authorId], references: [id])
-  authorId  Int
-  
-  @@map("posts")
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+  location  String // e.g., "Warehouse A"
+
+  @@map("Estoques")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  rating    Int // e.g., 1 to 5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@map("Avaliacoes")
+}
+
+model Image {
+  id        Int     @id @default(autoincrement())
+  url       String
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+
+  @@map("ImagemProdutos")
+}
+
+model PricingGroup {
+  id           Int       @id @default(autoincrement())
+  name         String
+  profitMargin Float // Margem de lucro em percentual, e.g., 20.0 para 20%
+  products     Product[]
+
+  @@map("GruposPrecificacoes")
+}
+
+model Order {
+  id                Int           @id @default(autoincrement())
+  user              User          @relation(fields: [userId], references: [id])
+  userId            Int
+  status            OrderStatus   @default(PENDING)
+  total             Float
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  items             OrderItem[]
+  shippingAddress   Address       @relation(fields: [shippingAddressId], references: [id])
+  shippingAddressId Int
+  paymentMethod     PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  paymentMethodId   Int
+  notes             String?
+
+  @@map("Pedidos")
+}
+
+model OrderItem {
+  id          Int               @id @default(autoincrement())
+  order       Order             @relation(fields: [orderId], references: [id])
+  orderId     Int
+  product     Product           @relation(fields: [productId], references: [id])
+  productId   Int
+  variation   ProductVariation? @relation(fields: [variationId], references: [id])
+  variationId Int?
+  quantity    Int
+  unitPrice   Float // Preço unitário no momento da compra
+  totalPrice  Float // Quantidade * Preço unitário
+
+@@map("PedidoItens")
+}
+
+model PaymentMethod {
+  id      Int    @id @default(autoincrement())
+  type    String // e.g., "Credit Card", "PayPal", etc.
+  details String // e.g., masked credit card number, PayPal email
+
+  Order Order[]
+  @@map("MetodosPagamentos")
 }
