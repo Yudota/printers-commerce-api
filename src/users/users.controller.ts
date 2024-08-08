@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from '@prisma/client';
+import { UserUpdateInput } from './users.types';
 
 @Controller('users')
 export class UsersController {
@@ -30,7 +31,7 @@ export class UsersController {
   }
 
   @Patch()
-  update(@Body() updateUserDto: Partial<User>) {
+  update(@Body() updateUserDto: UserUpdateInput & { id: number }) {
     return this.usersService.update(updateUserDto);
   }
 
