@@ -33,6 +33,7 @@ model User {
   cpf          String        @unique
   email        String        @unique
   password     String
+  isActive     Boolean       @default(false)
   role         UserRole
   addresses    Address[]
   phoneNumbers PhoneNumber[]
@@ -40,6 +41,8 @@ model User {
   orders       Order[]
   creditCards  CreditCard[]
   Review       Review[]
+  createdAt    DateTime      @default(now())
+  modifiedAt   DateTime      @updatedAt
 
   @@map("Usuarios")
 }
@@ -64,32 +67,38 @@ model Address {
 }
 
 model PhoneNumber {
-  id     Int    @id @default(autoincrement())
-  user   User   @relation(fields: [userId], references: [id])
-  userId Int
-  type   String
-  ddd    String
-  number String
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  type       String
+  ddd        String
+  number     String
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
 
   @@map("Telefones")
 }
 
 model CreditCard {
-  id             Int    @id @default(autoincrement())
-  user           User   @relation(fields: [userId], references: [id])
+  id             Int      @id @default(autoincrement())
+  user           User     @relation(fields: [userId], references: [id])
   userId         Int
   cardNumber     String
   cardHolderName String
   cardBrand      String
   securityCode   String
+  createdAt      DateTime @default(now())
+  modifiedAt     DateTime @updatedAt
 
   @@map("Cartoes")
 }
 
 model Category {
-  id       Int       @id @default(autoincrement())
-  name     String
-  products Product[]
+  id         Int       @id @default(autoincrement())
+  name       String
+  products   Product[]
+  createdAt  DateTime  @default(now())
+  modifiedAt DateTime  @updatedAt
 
   @@map("Categorias")
 }
@@ -109,50 +118,59 @@ model Product {
   reviews        Review[]
   images         Image[]
   OrderItem      OrderItem[]
+  createdAt      DateTime           @default(now())
+  modifiedAt     DateTime           @updatedAt
 
   @@map("Produtos")
 }
 
 model ProductVariation {
-  id        Int         @id @default(autoincrement())
-  product   Product     @relation(fields: [productId], references: [id])
-  productId Int
-  name      String // e.g., "Red", "1.75mm", "500g spool"
-  price     Float?
-  stock     Int
-  OrderItem OrderItem[]
+  id         Int         @id @default(autoincrement())
+  product    Product     @relation(fields: [productId], references: [id])
+  productId  Int
+  name       String // e.g., "Red", "1.75mm", "500g spool"
+  price      Float?
+  stock      Int
+  OrderItem  OrderItem[]
+  createdAt  DateTime    @default(now())
+  modifiedAt DateTime    @updatedAt
 
   @@map("ProdutosVariacoes")
 }
 
 model Stock {
-  id        Int     @id @default(autoincrement())
-  product   Product @relation(fields: [productId], references: [id])
-  productId Int
-  quantity  Int
-  location  String // e.g., "Warehouse A"
+  id         Int      @id @default(autoincrement())
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  Int
+  quantity   Int
+  location   String // e.g., "Warehouse A"
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
 
   @@map("Estoques")
 }
 
 model Review {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  product   Product  @relation(fields: [productId], references: [id])
-  productId Int
-  rating    Int // e.g., 1 to 5
-  comment   String?
-  createdAt DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  Int
+  rating     Int // e.g., 1 to 5
+  comment    String?
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
 
   @@map("Avaliacoes")
 }
 
 model Image {
-  id        Int     @id @default(autoincrement())
-  url       String
-  product   Product @relation(fields: [productId], references: [id])
-  productId Int
+  id         Int      @id @default(autoincrement())
+  url        String
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  Int
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
 
   @@map("ImagemProdutos")
 }
@@ -162,6 +180,8 @@ model PricingGroup {
   name         String
   profitMargin Float // Margem de lucro em percentual, e.g., 20.0 para 20%
   products     Product[]
+  createdAt    DateTime  @default(now())
+  modifiedAt   DateTime  @updatedAt
 
   @@map("GruposPrecificacoes")
 }
@@ -173,7 +193,7 @@ model Order {
   status            OrderStatus   @default(PENDING)
   total             Float
   createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  modifiedAt        DateTime      @updatedAt
   items             OrderItem[]
   shippingAddress   Address       @relation(fields: [shippingAddressId], references: [id])
   shippingAddressId Int
@@ -195,15 +215,19 @@ model OrderItem {
   quantity    Int
   unitPrice   Float // Preço unitário no momento da compra
   totalPrice  Float // Quantidade * Preço unitário
+  createdAt   DateTime          @default(now())
+  modifiedAt  DateTime          @updatedAt
 
-@@map("PedidoItens")
+  @@map("PedidoItens")
 }
 
 model PaymentMethod {
   id      Int    @id @default(autoincrement())
   type    String // e.g., "Credit Card", "PayPal", etc.
   details String // e.g., masked credit card number, PayPal email
+  Order      Order[]
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
 
-  Order Order[]
   @@map("MetodosPagamentos")
 }
